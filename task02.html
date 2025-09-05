@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculator with Square Root</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f2f2f2;
+    margin: 0;
+  }
+  .calculator {
+    width: 320px;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    padding: 20px;
+  }
+  #display {
+    width: 94%;
+    height: 60px;
+    font-size: 2rem;
+    text-align: right;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    background-color: #fffbcc;
+    color: #333;
+  }
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  button {
+    font-size: 1.5rem;
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: white;
+    background-color: #2196f3;
+    transition: background-color 0.3s ease, transform 0.15s ease;
+  }
+  button:hover {
+    background-color: #1976d2;
+    transform: scale(1.1);
+  }
+  button:active {
+    transform: scale(0.95);
+  }
+  button.operator {
+    background-color: #ff9800;
+  }
+  button.operator:hover {
+    background-color: #f57c00;
+  }
+  button.clear {
+    background-color: #f44336;
+  }
+  button.clear:hover {
+    background-color: #d32f2f;
+  }
+  button.equal {
+    background-color: #4caf50;
+  }
+  button.equal:hover {
+    background-color: #388e3c;
+  }
+  button.sqrt {
+    background-color: #9c27b0;
+  }
+  button.sqrt:hover {
+    background-color: #7b1fa2;
+  }
+</style>
+</head>
+<body>
+  <div class="calculator">
+    <input type="text" id="display" disabled />
+    <div class="buttons">
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button class="sqrt" onclick="squareRoot()">√</button>
+      <button class="operator" onclick="appendOperator('/')">÷</button>
+      <button class="operator" onclick="appendOperator('*')">×</button>
+
+      <button onclick="appendNumber('7')">7</button>
+      <button onclick="appendNumber('8')">8</button>
+      <button onclick="appendNumber('9')">9</button>
+      <button class="operator" onclick="appendOperator('-')">−</button>
+
+      <button onclick="appendNumber('4')">4</button>
+      <button onclick="appendNumber('5')">5</button>
+      <button onclick="appendNumber('6')">6</button>
+      <button class="operator" onclick="appendOperator('+')">+</button>
+
+      <button onclick="appendNumber('1')">1</button>
+      <button onclick="appendNumber('2')">2</button>
+      <button onclick="appendNumber('3')">3</button>
+      <button onclick="calculate()" class="equal">=</button>
+
+      <button onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+      <button onclick="appendDecimal('.')">.</button>
+      <button onclick="backspace()">⌫</button>
+    </div>
+  </div>
+
+<script>
+  const display = document.getElementById('display');
+
+  function appendNumber(num) {
+    if (display.value === '0') display.value = num;
+    else display.value += num;
+  }
+
+  function appendOperator(op) {
+    if (display.value === '' && op !== '-') return; // Only allow starting with '-'
+    const lastChar = display.value.slice(-1);
+    if ('+-*/%'.includes(lastChar)) {
+      display.value = display.value.slice(0, -1) + op;
+    } else if (display.value !== '') {
+      display.value += op;
+    }
+  }
+
+  function appendDecimal(dot) {
+    const lastNumber = display.value.split(/[\+\-\*\/\%]/).pop();
+    if (!lastNumber.includes(dot)) {
+      display.value += dot;
+    }
+  }
+
+  function clearDisplay() {
+    display.value = '';
+  }
+
+  function backspace() {
+    display.value = display.value.slice(0, -1);
+  }
+
+  function calculate() {
+    if (display.value === '') return;
+    try {
+      let expression = display.value.replace(/÷/g, '/').replace(/×/g, '*');
+      if (/^[0-9+\-*/%.() ]+$/.test(expression)) {
+        let result = Function('"use strict";return (' + expression + ')')();
+        display.value = result;
+      } else {
+        alert('Invalid input');
+      }
+    } catch (e) {
+      alert('Error in expression');
+    }
+  }
+
+  function squareRoot() {
+    if (display.value === '') return;
+    try {
+      let val = parseFloat(display.value);
+      if (val < 0) {
+        alert('Invalid input for square root');
+        return;
+      }
+      display.value = Math.sqrt(val);
+    } catch {
+      alert('Error calculating square root');
+    }
+  }
+</script>
+
+</body>
+</html>

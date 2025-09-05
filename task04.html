@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>My Tasks</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background: #f0f2f8;
+    color: #333;
+    overflow-x: hidden;
+  }
+  header {
+    background: #4357ad;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(67,87,173,0.6);
+  }
+  header h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 1.2px;
+  }
+  .profile-btn {
+    cursor: pointer;
+    border: 2px solid white;
+    border-radius: 30px;
+    padding: 6px 15px;
+    font-weight: 600;
+    background: transparent;
+    color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  .profile-btn:hover {
+    background-color: white;
+    color: #4357ad;
+  }
+  .profile-display {
+    font-weight: 600;
+    font-size: 1rem;
+    white-space: nowrap;
+    margin-left: 1rem;
+  }
+
+  #app-container {
+    max-width: 720px;
+    margin: 2rem auto 3rem;
+    padding: 0 1rem;
+  }
+
+  form#task-form {
+    background: white;
+    border-radius: 14px;
+    padding: 1.6rem 2rem;
+    box-shadow: 0 8px 24px rgba(67,87,173,0.12);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem 1.5rem;
+  }
+  form#task-form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 600;
+    color: #4357ad;
+  }
+  form#task-form input[type="text"],
+  form#task-form input[type="date"],
+  form#task-form input[type="time"],
+  form#task-form select {
+    margin-top: 0.35rem;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1.8px solid #ddd;
+    transition: border-color 0.3s ease;
+  }
+  form#task-form input[type="text"]:focus,
+  form#task-form input[type="date"]:focus,
+  form#task-form input[type="time"]:focus,
+  form#task-form select:focus {
+    outline: none;
+    border-color: #4357ad;
+  }
+  form#task-form button {
+    grid-column: 1 / -1;
+    padding: 14px 0;
+    border-radius: 12px;
+    border: none;
+    background: #4357ad;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.1rem;
+    box-shadow: 0 6px 18px rgba(67,87,173,0.7);
+    transition: background-color 0.3s ease;
+  }
+  form#task-form button:hover {
+    background-color: #2e3f7c;
+  }
+
+  ul#tasks-list {
+    margin-top: 2rem;
+    padding: 0;
+    list-style: none;
+  }
+  ul#tasks-list li {
+    background: white;
+    box-shadow: 0 8px 24px rgba(67,87,173,0.12);
+    border-radius: 14px;
+    padding: 1rem 1.6rem;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  ul#tasks-list li:hover {
+    box-shadow: 0 16px 40px rgba(67,87,173,0.22);
+    transform: translateY(-3px);
+  }
+  ul#tasks-list li.done span.task-name {
+    color: #f0a500;
+  }
+
+  ul#tasks-list li input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+  }
+  span.task-name {
+    font-weight: 600;
+    font-size: 1.15rem;
+    flex: 1;
+  }
+  span.task-star {
+    font-size: 1.3rem;
+    color: #f0a500;
+    user-select: none;
+  }
+
+  /* Detail View */
+  #task-detail {
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 10000;
+    padding: 3rem 2rem 2rem;
+    display: none;
+    flex-direction: column;
+  }
+  #task-detail.active {
+    display: flex;
+  }
+  #task-detail h2 {
+    font-weight: 700;
+    margin: 0 0 1.5rem;
+    color: #4357ad;
+  }
+  .detail-meta {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    color: #444;
+  }
+  #detail-star {
+    color: #f0a500;
+    font-size: 2.5rem;
+    margin-bottom: 1.8rem;
+    user-select: none;
+  }
+  #detail-buttons {
+    margin-top: auto;
+    display: flex;
+    gap: 1rem;
+  }
+  #detail-buttons button {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: white;
+  }
+  #btn-done {
+    background: #f0a500;
+    color: #333;
+  }
+  #btn-done:hover {
+    background: #c18700;
+  }
+  #btn-edit {
+    background: #4357ad;
+  }
+  #btn-edit:hover {
+    background: #2e3f7c;
+  }
+  #btn-delete {
+    background: #d64545;
+  }
+  #btn-delete:hover {
+    background: #a93030;
+  }
+  #btn-back {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 10px 16px;
+    background: #4357ad;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(67,87,173,0.7);
+    transition: background-color 0.3s ease;
+    z-index: 11000;
+  }
+  #btn-back:hover {
+    background-color: #2e3f7c;
+  }
+
+  /* Profile Modal */
+  #profile-modal-container {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 20000;
+  }
+  #profile-modal-container.active {
+    display: flex;
+  }
+  #profile-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem 3rem;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  #profile-modal h2 {
+    margin-top: 0;
+    font-weight: 700;
+    color: #4357ad;
+    font-size: 1.8rem;
+    margin-bottom: 1.6rem;
+  }
+  #profile-modal input {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 0.7rem 0 1.3rem;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 1.8px solid #ddd;
+    transition: border-color 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+  }
+  #profile-modal input:focus {
+    border-color: #4357ad;
+    outline: none;
+  }
+  #profile-modal button {
+    background: #4357ad;
+    color: white;
+    border: none;
+    padding: 14px 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(67,87,173,0.7);
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  #profile-modal button:hover {
+    background-color: #2e3f7c;
+  }
+
+  /* Profile display on header */
+  #header-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: white;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    form#task-form {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>My Tasks</h1>
+  <div style="display: flex; align-items: center;">
+    <button class="profile-btn" id="openProfileBtn" aria-label="Open profile form">Login / Profile</button>
+    <span class="profile-display" id="headerProfileDisplay"></span>
+  </div>
+</header>
+
+<div id="app-container">
+  <form id="task-form" aria-label="Add new task">
+    <label for="taskName">Task Name:
+      <input required type="text" id="taskName" name="taskName" placeholder="Enter task" autocomplete="off" />
+    </label>
+    <label for="taskPriority">Priority:
+      <select required id="taskPriority" name="taskPriority">
+        <option value="" disabled selected>Select priority</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </label>
+    <label for="taskDate">Date:
+      <input required type="date" id="taskDate" name="taskDate" />
+    </label>
+    <label for="taskTime">Time:
+      <input required type="time" id="taskTime" name="taskTime" />
+    </label>
+    <label for="taskRepeat">Repeat:
+      <select required id="taskRepeat" name="taskRepeat">
+        <option value="None" selected>None</option>
+        <option value="Daily">Daily</option>
+        <option value="Monthly">Monthly</option>
+      </select>
+    </label>
+    <button type="submit">Add Task</button>
+  </form>
+
+  <ul id="tasks-list" aria-label="List of tasks"></ul>
+</div>
+
+<!-- Task Detail View -->
+<div id="task-detail" tabindex="-1" aria-labelledby="detailTitle" aria-modal="true" role="dialog">
+  <button id="btn-back" aria-label="Go back to task list">Back</button>
+  <h2 id="detailTitle"></h2>
+  <div class="detail-meta" id="detailPriority"></div>
+  <div class="detail-meta" id="detailDateTime"></div>
+  <div class="detail-meta" id="detailRepeat"></div>
+  <div id="detail-star" aria-label="Task done status"></div>
+  <div id="detail-buttons">
+    <button id="btn-done">Mark Done</button>
+    <button id="btn-edit">Edit</button>
+    <button id="btn-delete">Delete</button>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profile-modal-container" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" tabindex="-1">
+  <div id="profile-modal">
+    <h2 id="profileModalTitle">Create Profile</h2>
+    <input type="text" id="profileNameInput" placeholder="Enter your name" autocomplete="off" aria-label="Enter name" />
+    <input type="email" id="profileEmailInput" placeholder="Enter your email" autocomplete="off" aria-label="Enter email" />
+    <button id="btnSaveProfile">Save Profile</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const taskForm = document.getElementById('task-form');
+  const tasksList = document.getElementById('tasks-list');
+  const detailScreen = document.getElementById('task-detail');
+  const btnBack = document.getElementById('btn-back');
+  const detailTitle = document.getElementById('detailTitle');
+  const detailPriority = document.getElementById('detailPriority');
+  const detailDateTime = document.getElementById('detailDateTime');
+  const detailRepeat = document.getElementById('detailRepeat');
+  const detailStar = document.getElementById('detail-star');
+  const btnDone = document.getElementById('btn-done');
+  const btnEdit = document.getElementById('btn-edit');
+  const btnDelete = document.getElementById('btn-delete');
+
+  const openProfileBtn = document.getElementById('openProfileBtn');
+  const profileModalContainer = document.getElementById('profile-modal-container');
+  const btnSaveProfile = document.getElementById('btnSaveProfile');
+  const profileNameInput = document.getElementById('profileNameInput');
+  const profileEmailInput = document.getElementById('profileEmailInput');
+  const headerProfileDisplay = document.getElementById('headerProfileDisplay');
+
+  let tasks = [];
+  let currentIndex = null;
+  let editingIndex = null;
+
+  function formatDate(d) {
+    if(!d) return '';
+    const dt = new Date(d);
+    if(isNaN(dt)) return '';
+    return dt.toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'});
+  }
+  function formatTime(t) {
+    if(!t) return '';
+    let [h,m] = t.split(':');
+    h = Number(h);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + m + ' ' + suffix;
+  }
+  function stars(count=1) {
+    return '⭐'.repeat(count);
+  }
+
+  function saveTasks() {
+    localStorage.setItem('mytasks-tasks', JSON.stringify(tasks));
+  }
+  function loadTasks() {
+    const stored = localStorage.getItem('mytasks-tasks');
+    if(stored) tasks = JSON.parse(stored);
+  }
+  function saveProfile(data) {
+    localStorage.setItem('mytasks-profile', JSON.stringify(data));
+  }
+  function loadProfile() {
+    const stored = localStorage.getItem('mytasks-profile');
+    return stored ? JSON.parse(stored) : null;
+  }
+  function renderProfile() {
+    const profile = loadProfile();
+    if(profile){
+      headerProfileDisplay.textContent = `Welcome, ${profile.name}`;
+    } else {
+      headerProfileDisplay.textContent = '';
+    }
+  }
+
+  function renderTasks() {
+    tasksList.innerHTML = '';
+    tasks.forEach((task, i) => {
+      const li = document.createElement('li');
+      li.classList.toggle('done', task.done);
+      li.setAttribute('tabindex', '0');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.done;
+      checkbox.className = 'task-checkbox';
+      checkbox.setAttribute('aria-label','Mark task done');
+      checkbox.addEventListener('change', e => {
+        e.stopPropagation();
+        tasks[i].done = checkbox.checked;
+        saveTasks();
+        renderTasks();
+      });
+      li.appendChild(checkbox);
+
+      const span = document.createElement('span');
+      span.className = 'task-name';
+      span.textContent = task.name;
+      li.appendChild(span);
+
+      const starSpan = document.createElement('span');
+      starSpan.className = 'task-star';
+      starSpan.textContent = task.done ? stars(1) : '';
+      li.appendChild(starSpan);
+
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+      meta.style.marginLeft = '10px';
+      meta.style.fontSize = '0.85rem';
+      meta.style.color = '#666';
+      meta.style.whiteSpace = 'nowrap';
+      meta.textContent = `${task.priority} • ${formatDate(task.date)} ${formatTime(task.time)} • ${task.repeat}`;
+      li.appendChild(meta);
+
+      li.addEventListener('click', () => showDetail(i));
+      tasksList.appendChild(li);
+    });
+  }
+
+  function showDetail(idx) {
+    currentIndex = idx;
+    const task = tasks[idx];
+    detailTitle.textContent = task.name;
+    detailPriority.innerHTML = '<strong>Priority:</strong> ' + task.priority;
+    detailDateTime.innerHTML = '<strong>Date & Time:</strong> ' + formatDate(task.date) + ' ' + formatTime(task.time);
+    detailRepeat.innerHTML = '<strong>Repeat:</strong> ' + task.repeat;
+    detailStar.textContent = task.done ? stars(1) : 'Not done';
+    btnDone.textContent = task.done ? 'Mark Undone' : 'Mark Done';
+    detailScreen.classList.add('active');
+    detailScreen.focus();
+  }
+  function hideDetail() {
+    currentIndex = null;
+    detailScreen.classList.remove('active');
+  }
+
+  btnBack.onclick = hideDetail;
+  btnDone.onclick = () => {
+    if(currentIndex === null) return;
+    tasks[currentIndex].done = !tasks[currentIndex].done;
+    saveTasks();
+    renderTasks();
+    showDetail(currentIndex);
+  };
+  btnEdit.onclick = () => {
+    if(currentIndex === null) return;
+    editingIndex = currentIndex;
+    hideDetail();
+
+    const task = tasks[editingIndex];
+    document.getElementById('taskName').value = task.name;
+    document.getElementById('taskPriority').value = task.priority;
+    document.getElementById('taskDate').value = task.date;
+    document.getElementById('taskTime').value = task.time;
+    document.getElementById('taskRepeat').value = task.repeat;
+
+    tasks.splice(editingIndex, 1);
+    saveTasks();
+    renderTasks();
+  };
+  btnDelete.onclick = () => {
+    if(currentIndex === null) return;
+    if(confirm('Delete this task?')) {
+      tasks.splice(currentIndex, 1);
+      saveTasks();
+      renderTasks();
+      hideDetail();
+    }
+  };
+
+  taskForm.onsubmit = e => {
+    e.preventDefault();
+    const name = document.getElementById('taskName').value.trim();
+    const priority = document.getElementById('taskPriority').value;
+    const date = document.getElementById('taskDate').value;
+    const time = document.getElementById('taskTime').value;
+    const repeat = document.getElementById('taskRepeat').value;
+    if(!name || !priority || !date || !time || !repeat) {
+      alert('Please complete all fields.');
+      return;
+    }
+    tasks.push({name, priority, date, time, repeat, done:false});
+    saveTasks();
+    renderTasks();
+    taskForm.reset();
+  };
+
+  openProfileBtn.onclick = () => {
+    profileModalContainer.classList.add('active');
+    profileModalContainer.setAttribute('aria-hidden', 'false');
+    profileNameInput.value = '';
+    profileEmailInput.value = '';
+    profileNameInput.focus();
+  };
+  profileModalContainer.onclick = e => {
+    if(e.target === profileModalContainer) {
+      profileModalContainer.classList.remove('active');
+      profileModalContainer.setAttribute('aria-hidden', 'true');
+    }
+  };
+  btnSaveProfile.onclick = () => {
+    const name = profileNameInput.value.trim();
+    const email = profileEmailInput.value.trim();
+    if(!name || !email) {
+      alert('Please enter both name and email.');
+      return;
+    }
+    localStorage.setItem('mytasks-profile', JSON.stringify({name, email}));
+    profileModalContainer.classList.remove('active');
+    profileModalContainer.setAttribute('aria-hidden', 'true');
+    renderProfile();
+  };
+  window.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && profileModalContainer.classList.contains('active')) {
+      profileModalContainer.classList.remove('active');
+      profileModalContainer.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  function renderProfile() {
+    const profile = JSON.parse(localStorage.getItem('mytasks-profile'));
+    headerProfileDisplay.textContent = profile ? `Welcome, ${profile.name}` : '';
+  }
+
+  function init() {
+    renderProfile();
+    const stored = localStorage.getItem('mytasks-tasks');
+    if(stored) tasks = JSON.parse(stored);
+    renderTasks();
+  }
+  window.onload = init;
+})();
+</script>
+
+</body>
+</html>

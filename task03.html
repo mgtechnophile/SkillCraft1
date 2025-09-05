@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tic Tac Toe - PvP & AI with Scoreboard</title>
+<style>
+  body {
+    background-color: #f0f8ff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0; padding: 1rem;
+    user-select: none;
+  }
+  h1 {
+    margin-bottom: 0.25rem;
+    color: #333;
+  }
+  #mode-select {
+    margin-bottom: 1rem;
+  }
+  .btn-mode {
+    padding: 0.4rem 1rem;
+    margin: 0 0.5rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 20px;
+    background: #007acc;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.3s;
+  }
+  .btn-mode.active, .btn-mode:hover {
+    background: #005f99;
+  }
+  .game-container {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    grid-template-rows: repeat(3, 100px);
+    gap: 10px;
+  }
+  .cell {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: #007acc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  .cell:hover {
+    background-color: #e0f0ff;
+  }
+  .cell.win {
+    background-color: #90ee90 !important;
+    color: #081a10;
+  }
+  .info {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    color: #555;
+    min-height: 1.5em;
+  }
+  .scoreboard {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    font-size: 1rem;
+  }
+  .scoreboard div {
+    background: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,122,204,0.3);
+  }
+  button#reset-btn {
+    margin-top: 1.5rem;
+    padding: 0.6rem 2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 25px;
+    background-color: #007acc;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,122,204,0.6);
+    transition: background-color 0.3s;
+  }
+  button#reset-btn:hover {
+    background-color: #005f99;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tic Tac Toe</h1>
+
+<div id="mode-select" role="radiogroup" aria-label="Choose game mode">
+  <button class="btn-mode active" data-mode="two-player" role="radio" aria-checked="true" tabindex="0">Two Players</button>
+  <button class="btn-mode" data-mode="easy-ai" role="radio" aria-checked="false" tabindex="-1">Play vs Easy AI</button>
+  <button class="btn-mode" data-mode="hard-ai" role="radio" aria-checked="false" tabindex="-1">Play vs Hard AI</button>
+</div>
+
+<div class="game-container" aria-label="Tic Tac Toe board" role="grid" tabindex="0">
+  <div class="cell" data-index="0" role="gridcell" tabindex="0" aria-label="Empty cell 1"></div>
+  <div class="cell" data-index="1" role="gridcell" tabindex="0" aria-label="Empty cell 2"></div>
+  <div class="cell" data-index="2" role="gridcell" tabindex="0" aria-label="Empty cell 3"></div>
+  <div class="cell" data-index="3" role="gridcell" tabindex="0" aria-label="Empty cell 4"></div>
+  <div class="cell" data-index="4" role="gridcell" tabindex="0" aria-label="Empty cell 5"></div>
+  <div class="cell" data-index="5" role="gridcell" tabindex="0" aria-label="Empty cell 6"></div>
+  <div class="cell" data-index="6" role="gridcell" tabindex="0" aria-label="Empty cell 7"></div>
+  <div class="cell" data-index="7" role="gridcell" tabindex="0" aria-label="Empty cell 8"></div>
+  <div class="cell" data-index="8" role="gridcell" tabindex="0" aria-label="Empty cell 9"></div>
+</div>
+
+<div class="info" aria-live="polite" id="gameInfo">Player X's turn</div>
+
+<div class="scoreboard" aria-label="Scoreboard">
+  <div>Player X Wins: <span id="x-wins">0</span></div>
+  <div>Player O Wins: <span id="o-wins">0</span></div>
+  <div>Draws: <span id="draws">0</span></div>
+</div>
+
+<button id="reset-btn" aria-label="Reset Game">Reset Game</button>
+
+<script>
+  const cells = document.querySelectorAll('.cell');
+  const infoDisplay = document.getElementById('gameInfo');
+  const resetBtn = document.getElementById('reset-btn');
+  const modeButtons = document.querySelectorAll('.btn-mode');
+
+  let board = ['', '', '', '', '', '', '', '', ''];
+  let currentPlayer = 'X';
+  let isGameActive = true;
+  let gameMode = 'two-player';
+
+  let xWins = 0;
+  let oWins = 0;
+  let draws = 0;
+
+  const winningConditions = [
+    [0,1,2], [3,4,5], [6,7,8],
+    [0,3,6], [1,4,7], [2,5,8],
+    [0,4,8], [2,4,6]
+  ];
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      modeButtons.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-checked', 'false');
+        b.tabIndex = -1;
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-checked', 'true');
+      btn.tabIndex = 0;
+      gameMode = btn.getAttribute('data-mode');
+      resetGame();
+    });
+  });
+
+  function handleCellClick(event) {
+    const cell = event.target;
+    const index = parseInt(cell.getAttribute('data-index'));
+
+    if (board[index] !== '' || !isGameActive) return;
+
+    if (gameMode !== 'two-player' && currentPlayer === 'O') return;
+
+    updateCell(cell, index);
+    if (checkWin()) {
+      endGame(currentPlayer + ' wins!');
+      updateScores(currentPlayer);
+      return;
+    }
+    if (isDraw()) {
+      endGame("It's a draw!");
+      draws++;
+      updateScoreDisplay();
+      return;
+    }
+    switchPlayer();
+    if ((gameMode === 'easy-ai' || gameMode === 'hard-ai') && currentPlayer === 'O' && isGameActive) {
+      setTimeout(aiMove, 400);
+    }
+  }
+
+  function updateCell(cell, index) {
+    board[index] = currentPlayer;
+    cell.textContent = currentPlayer;
+    cell.setAttribute('aria-label', `Cell ${index + 1} with ${currentPlayer}`);
+  }
+
+  function switchPlayer() {
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    infoDisplay.textContent = `Player ${currentPlayer}'s turn`;
+  }
+
+  function checkWin() {
+    return winningConditions.some(condition => {
+      const [a,b,c] = condition;
+      return board[a] && board[a] === board[b] && board[b] === board[c];
+    });
+  }
+
+  function isDraw() {
+    return board.every(cell => cell !== '');
+  }
+
+  function endGame(message) {
+    infoDisplay.textContent = message;
+    isGameActive = false;
+    highlightWinningCells();
+  }
+
+  function highlightWinningCells() {
+    for (let condition of winningConditions) {
+      const [a,b,c] = condition;
+      if (board[a] !== '' && board[a] === board[b] && board[b] === board[c]) {
+        cells[a].classList.add('win');
+        cells[b].classList.add('win');
+        cells[c].classList.add('win');
+      }
+    }
+  }
+
+  function aiMove() {
+    if (!isGameActive) return;
+
+    let move;
+    if (gameMode === 'easy-ai') {
+      move = easyAiMove();
+    } else {
+      move = minimax(board, 'O').index;
+    }
+    const cell = cells[move];
+    updateCell(cell, move);
+
+    if (checkWin()) {
+      endGame(currentPlayer + ' wins!');
+      updateScores(currentPlayer);
+      return;
+    }
+    if (isDraw()) {
+      endGame("It's a draw!");
+      draws++;
+      updateScoreDisplay();
+      return;
+    }
+    switchPlayer();
+  }
+
+  function easyAiMove() {
+    let available = [];
+    board.forEach((c, i) => { if (c === '') available.push(i); });
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  // Minimax Algorithm for Hard AI
+  function minimax(newBoard, player) {
+    let availSpots = newBoard.map((v, i) => v === '' ? i : null).filter(val => val !== null);
+
+    if (checkWinCondition(newBoard, 'X')) return {score: -10};
+    else if (checkWinCondition(newBoard, 'O')) return {score: 10};
+    else if (availSpots.length === 0) return {score:0};
+
+    let moves = [];
+
+    for (let i=0; i<availSpots.length; i++) {
+      let move = {};
+      move.index = availSpots[i];
+      newBoard[availSpots[i]] = player;
+
+      if (player === 'O') {
+        let result = minimax(newBoard, 'X');
+        move.score = result.score;
+      } else {
+        let result = minimax(newBoard, 'O');
+        move.score = result.score;
+      }
+
+      newBoard[availSpots[i]] = '';
+      moves.push(move);
+    }
+
+    let bestMove;
+    if (player === 'O') {
+      let bestScore = -Infinity;
+      moves.forEach(m => {
+        if (m.score > bestScore) {
+          bestScore = m.score;
+          bestMove = m;
+        }
+      });
+    } else {
+      let bestScore = Infinity;
+      moves.forEach(m => {
+        if (m.score < bestScore) {
+          bestScore = m.score;
+          bestMove = m;
+        }
+      });
+    }
+    return bestMove;
+  }
+
+  function checkWinCondition(boardState, player) {
+    return winningConditions.some(condition => {
+      const [a,b,c] = condition;
+      return boardState[a] === player && boardState[b] === player && boardState[c] === player;
+    });
+  }
+
+  function updateScores(winner) {
+    if (winner === 'X') xWins++;
+    else if (winner === 'O') oWins++;
+    updateScoreDisplay();
+  }
+
+  function updateScoreDisplay() {
+    document.getElementById('x-wins').textContent = xWins;
+    document.getElementById('o-wins').textContent = oWins;
+    document.getElementById('draws').textContent = draws;
+  }
+
+  function resetGame() {
+    board = ['', '', '', '', '', '', '', '', ''];
+    isGameActive = true;
+    currentPlayer = 'X';
+    infoDisplay.textContent = `Player ${currentPlayer}'s turn`;
+    cells.forEach(cell => {
+      cell.textContent = '';
+      cell.classList.remove('win');
+      cell.setAttribute('aria-label', 'Empty cell');
+    });
+  }
+
+  cells.forEach(cell => {
+    cell.addEventListener('click', handleCellClick);
+    cell.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        cell.click();
+      }
+    });
+  });
+
+  resetBtn.addEventListener('click', resetGame);
+
+  // Initialize scoreboard
+  updateScoreDisplay();
+</script>
+
+</body>
+</html>

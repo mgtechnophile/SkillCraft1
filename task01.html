@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TastyGo - Food Delivery</title>
+  <style>
+    body {margin:0; font-family:sans-serif; background:#f9f7f5; color:#222;}
+    .navbar {
+      background:#fffbe9; position:sticky;top:0;z-index:99; box-shadow:0 1px 8px #2221;
+      display:flex;align-items:center;justify-content:space-between;padding:.7rem 1.1rem;
+    }
+    .logo { font-size:2rem; font-weight:700; color:#fd9644; }
+    .nav-menu {display:flex;gap:2rem;align-items:center;}
+    .nav-item { color:#333; text-decoration:none; font-size:1.08rem; font-weight:500; padding:0.3rem 0.8rem; border-radius:19px; cursor:pointer; transition:.2s; }
+    .nav-item.active, .nav-item:hover { background:#fff6c7; color:#fd9644; }
+    .nav-cart { font-size:1.45rem; position:relative; color:#fd9644; cursor:pointer; }
+    .cart-count {
+      background:#e32636; color:#fff; font-size:0.85rem; padding:1px 7px; border-radius:999px; position:absolute; left:20px;top:-7px;
+    }
+    @media(max-width:640px){ .nav-menu{gap:1.1rem;} .logo{font-size:1.5rem;} }
+    .page-section {display:none; min-height:68vh;}
+    .page-section.active {display:block; animation:fadein .22s;}
+    @keyframes fadein {from {opacity:.3; transform:translateY(16px);} to{opacity:1;transform:none;}}
+    .hero {
+      background:#fffbe9; padding:3.5rem 0 2.7rem 0; text-align:center; color:#d35400;
+    }
+    .hero h1 {font-size:2.7rem; margin-bottom:1rem; font-weight:800;}
+    .hero p {font-size:1.24rem;}
+    .btn, button {
+      background:#fd9644; color:#fff; padding:.66rem 2rem; border-radius:2rem;
+      text-decoration:none; font-size:1.09rem; font-weight:600; border:none; cursor:pointer; transition: background-color 0.2s; margin-top:1rem;
+    }
+    .btn:hover, button:hover {background:#f57c00;}
+    .back-bar {
+      display:flex; align-items:center; gap:.5rem; background:#fff6c7; color:#fd9644; padding:.7rem 1rem .2rem 1rem; font-size:1.15rem;
+    }
+    .back-btn-top {
+      background:none; border:none; color:#fd9644; font-size:1.6rem; margin-right:.4rem; cursor:pointer;
+    }
+    .section-title {font-size:1.27rem; margin:2.1rem 1.1rem .9rem 1.3rem; font-weight:bold; color:#fd9644;}
+    #search-bar {width:100%;max-width:340px;margin:1rem auto;display:flex;}
+    #search-input {padding:.6rem 1rem;width:100%;font-size:1.04rem;border:1px solid #fd9644;border-radius:2rem 0 0 2rem;}
+    #search-btn {padding:.5rem 1.2rem;background:#fd9644;border:none;border-radius:0 2rem 2rem 0;font-weight:500; cursor:pointer; color:#fff;}
+    .food-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1.2rem; padding:1.5rem 1rem;
+    }
+    .food-card {
+      background:#fff; border-radius:.9rem; box-shadow:0 2px 8px #2222;
+      padding:1.1rem; text-align:center; display:flex; flex-direction:column; gap:.25rem; border:2px solid #fffbe9; transition:.14s;
+    }
+    .food-card:hover {box-shadow:0 8px 22px #fd964401; border-color:#fd9644;}
+    .food-card img {max-width:99%; object-fit:cover; border-radius:.65rem; height:126px; margin-bottom:0.7rem; box-shadow:0 1px 10px #fd964421;}
+    .food-card h3 {font-size:1.02rem; margin:.7rem 0 .3rem 0; font-weight:700;}
+    .food-card p {font-size:1.01rem; font-weight:500; margin:.13rem 0; color:#d35400;}
+    .add-to-cart { background:#fffbe9; color:#fd9644; border:none; padding:.5rem 1.3rem; border-radius:2rem; cursor:pointer; font-size:1rem; font-weight:600; margin-top:.5rem; transition: background-color .2s;}
+    .add-to-cart:hover { background:#fd9644; color:#fff; }
+    .cart-items, .orders-history {
+      margin:.55rem 1.3rem; max-width:600px;
+    }
+    .cart-items li, .orders-history li {
+      list-style:none; margin-bottom:.55rem; padding:.6rem 1.1rem; background:#fffbe9;
+      border-radius:7px; display:flex; align-items:center; justify-content:space-between; font-size:1rem;
+      box-shadow: 0 1px 6px #fd964408;
+    }
+    .cart-items .item-info {flex:1; text-align:left;}
+    .qty-btns {display:flex; align-items:center; gap:8px;}
+    .qty-update {cursor:pointer;font-size:1rem;background:#fd9644;color:#fff;border:none;border-radius:50%;width:27px;height:27px;font-weight:600;}
+    .qty-update:hover {background:#f57c00;}
+    .total-summary {margin:1.2rem 1.5rem 0 1.5rem;font-size:1.07rem;font-weight:600;color:#d35400;}
+    .place-order-btn, .confirm-pay-btn {background:#fd9644; color:#fff; font-weight:600; padding:.62rem 1.6rem; border-radius:1.2rem; border:none; cursor:pointer; font-size:1.06rem;}
+    .empty-cart-btn { background:#e32636; color:#fff; font-weight:600; border:none; border-radius:1rem; padding:.3rem 1.2rem; cursor:pointer; margin-left:1.2rem; }
+    .empty-cart-btn:hover { background:#b82128; }
+    .payment-form label {
+      font-weight:600; margin:.35rem 0 .1rem 0; display:block; color:#d35400;
+    }
+    .payment-form input, .payment-form select {
+      width:100%; padding:.6rem; margin-bottom:.7rem; border-radius:11px; border:1px solid #fd9644; font-size:1.04rem;
+      background:#fffbe9;
+    }
+    .thank-section {
+      text-align:center; padding:2.2rem 1rem; max-width:400px; margin:2.2rem auto; background:#fffbe9; border-radius:1rem; box-shadow:0 10px 30px #fd964414; animation:fadeInUp 0.5s ease forwards;
+    }
+    .thank-section img { width:115px; margin-bottom:1rem; filter: drop-shadow(0 3px 3px #fd964433);}
+    .thank-section h1 { font-size:2rem; color:#fd9644; }
+    .trace-order { background:#fff; border-radius:12px; padding:1rem; text-align:left; font-size:0.97rem; color:#d35400; box-shadow: 0 0 8px #eee; line-height:1.41; margin-top:1rem;}
+    footer {margin-top:3rem; padding:1rem; background:#fffbe9; color:#d35400; text-align:center; font-size:0.98rem;}
+    @media(max-width:640px){ .logo{font-size:1.25rem} .food-card img{height:92px;}}
+    @keyframes fadeInUp {0%{opacity:0;transform:translateY(23px);} 100%{opacity:1;transform:translateY(0);}}
+  </style>
+</head>
+<body>
+<nav class="navbar" role="navigation">
+  <span class="logo">TastyGo</span>
+  <div class="nav-menu">
+    <span class="nav-item active" data-page="home">Home</span>
+    <span class="nav-item" data-page="menu">Menu</span>
+    <span class="nav-item" data-page="orders">Orders</span>
+    <span class="nav-cart" aria-label="View Cart" data-page="cart">
+      🍽 <span class="cart-count" id="cart-count">0</span>
+    </span>
+  </div>
+</nav>
+
+<!-- Home Page -->
+<section id="page-home" class="page-section active">
+  <div class="hero">
+    <h1>Delicious food, delivered fast</h1>
+    <p>Order from your favourite restaurants and street food kitchens.<br/>From biryani to burgers, it's all fresh.</p>
+    <button class="btn" onclick="switchPage('menu')">Browse Menu</button>
+  </div>
+</section>
+
+<!-- Menu/Page -->
+<section id="page-menu" class="page-section">
+  <div class="back-bar">
+    <button class="back-btn-top" onclick="switchPage('home')">&#8592;</button>
+    Menu
+  </div>
+  <h3 class="section-title">Popular Dishes</h3>
+  <div id="search-bar">
+    <input type="text" id="search-input" placeholder="Search dishes..."/>
+    <button id="search-btn">Search</button>
+  </div>
+  <div id="food-list" class="food-grid"></div>
+</section>
+
+<!-- Cart Page -->
+<section id="page-cart" class="page-section">
+  <div class="back-bar">
+    <button class="back-btn-top" onclick="switchPage('menu')">&#8592;</button>
+    Your Cart
+  </div>
+  <ul class="cart-items" id="cart-items"></ul>
+  <div class="total-summary"><b>Total:</b> ₹<span id="cart-total">0</span></div>
+  <button class="place-order-btn" onclick="openPayment()">Place Order</button>
+  <button class="empty-cart-btn" onclick="emptyCart()">Empty Cart</button>
+</section>
+
+<!-- Payment Page -->
+<section id="page-payment" class="page-section">
+  <div class="back-bar">
+    <button class="back-btn-top" onclick="switchPage('cart')">&#8592;</button>
+    Checkout
+  </div>
+  <form class="payment-form" id="payment-form" autocomplete="off" onsubmit="return false;">
+    <label for="cust-name">Name</label>
+    <input type="text" id="cust-name" required placeholder="Your name" />
+    <label for="cust-mobile">Mobile</label>
+    <input type="text" id="cust-mobile" required maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" />
+    <label for="cust-addr">Address</label>
+    <input type="text" id="cust-addr" required placeholder="Delivery address" />
+    <label for="cust-pay">Payment Mode</label>
+    <select id="cust-pay">
+      <option value="upi">UPI</option>
+      <option value="card">Credit/Debit Card</option>
+      <option value="cod">Cash on Delivery</option>
+    </select>
+    <button type="submit" class="confirm-pay-btn" onclick="confirmPay()">Done</button>
+  </form>
+</section>
+
+<!-- Thank You Page -->
+<section id="page-thanks" class="page-section">
+  <div class="back-bar">
+    <button class="back-btn-top" onclick="switchPage('home')">&#8592;</button>
+    Order Confirmation
+  </div>
+  <div class="thank-section">
+    <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="Thank You" />
+    <h1>Order Placed!</h1>
+    <p>We'll deliver your food super fast.<br/>Order summary below:</p>
+    <div class="trace-order" id="order-trace"></div>
+    <button class="btn" onclick="switchPage('home')">&#8592; Home</button>
+  </div>
+</section>
+
+<!-- Orders History -->
+<section id="page-orders" class="page-section">
+  <div class="back-bar">
+    <button class="back-btn-top" onclick="switchPage('menu')">&#8592;</button>
+    Order History
+  </div>
+  <h3 class="section-title">Your Previous Orders</h3>
+  <ul class="orders-history" id="orders-history"></ul>
+</section>
+
+<footer>
+  © 2025 TastyGo. All rights reserved.<br/>UI inspired by Swiggy and Zomato.
+</footer>
+<script>
+const foodMenu = [
+  {id:1, name:"Paneer Butter Masala", price:320, img:"https://i.pinimg.com/736x/da/f3/98/daf3988311896ed002a1d75f3702870c.jpg", desc:"Rich creamy paneer with Indian spices."},
+  {id:2, name:"Chicken Biryani", price:280, img:"https://i.pinimg.com/736x/2b/64/e1/2b64e15ac11687bb3074b9f7abc87edd.jpg", desc:"Dum-cooked aromatic basmati biryani."},
+  {id:3, name:"Masala Dosa", price:120, img:"https://i.pinimg.com/736x/69/e9/6b/69e96b19c26f337f8b47257aa8e6ad25.jpg", desc:"Signature crispy dosa with potato."},
+  {id:4, name:"Butter Naan", price:60, img:"https://i.pinimg.com/1200x/0c/34/6a/0c346a918e8b9fa5f04417f19df67a8c.jpg", desc:"Soft Indian leavened bread."},
+  {id:5, name:"Pasta Alfredo", price:240, img:"https://i.pinimg.com/1200x/06/28/5f/06285fdcaefcb917430deedcc637ada1.jpg", desc:"Creamy white sauce pasta."},
+  {id:6, name:"Pizza Margherita", price:300, img:"https://i.pinimg.com/1200x/9d/2f/62/9d2f62b46c1a23bd26df0d455c3a388f.jpg", desc:"Classic Italian cheese pizza."},
+  {id:7, name:"Vada Pav", price:50, img:"https://i.pinimg.com/736x/b2/f5/ae/b2f5aee563003508e7fb19d47e1114cd.jpg", desc:"Mumbai's famous spicy vada pav."},
+  {id:8, name:"Veg Fried Rice", price:180, img:"https://i.pinimg.com/1200x/9a/8f/69/9a8f69fd582406faad3c2a31ca4b7808.jpg", desc:"Stir fried veggies and rice."},
+  {id:9, name:"Gulab Jamun", price:80, img:"https://i.pinimg.com/736x/41/77/92/4177920dbd75f39879704d84f9458473.jpg", desc:"Sweet hot syrupy gulab jamun."},
+  {id:10, name:"Momo Platter", price:150, img:"https://i.pinimg.com/1200x/0b/5e/b4/0b5eb439a0fe2c71aa7b427d3402e1ea.jpg", desc:"Steamed veg momos with sauce."},
+  {id:11, name:"Fish Curry", price:350, img:"https://i.pinimg.com/1200x/54/60/30/54603067253d3b045399b50d99d0da14.jpg", desc:"Coastal style spicy fish curry."},
+  {id:12, name:"Chocolate Cake", price:140, img:"https://i.pinimg.com/1200x/18/2e/f4/182ef49204fa76d6f1b8faf395c92ac2.jpg", desc:"Moist chocolate dessert."}
+]
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let orders = JSON.parse(localStorage.getItem('orders')) || [];
+
+function switchPage(page){
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  window.scrollTo({top:0,behavior:"smooth"});
+  // Highlight nav
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(page==='home')document.querySelector('.nav-item[data-page="home"]').classList.add('active');
+  if(page==='menu')document.querySelector('.nav-item[data-page="menu"]').classList.add('active');
+  if(page==='orders')document.querySelector('.nav-item[data-page="orders"]').classList.add('active');
+}
+
+// Render menu
+function renderFoodMenu(menu){
+  const foodList = document.getElementById('food-list');
+  foodList.innerHTML = menu.map(item => `
+    <div class="food-card">
+      <img src="${item.img}" alt="${item.name}"/>
+      <h3>${item.name}</h3>
+      <p>${item.desc}</p>
+      <p><b>₹${item.price}</b></p>
+      <button class="add-to-cart" onclick="addToCart(${item.id})">Add to Cart</button>
+    </div>
+  `).join('');
+}
+
+function addToCart(id){
+  const prod = foodMenu.find(x => x.id===id);
+  const idx = cart.findIndex(x => x.id===id);
+  if(idx > -1) cart[idx].qty++;
+  else cart.push({...prod,qty:1});
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartCount();
+  switchPage('cart');
+  renderCart();
+}
+function updateCartCount(){
+  document.getElementById('cart-count').innerText = cart.reduce((a,c)=>a+c.qty,0);
+}
+function renderCart(){
+  const list = document.getElementById('cart-items');
+  list.innerHTML = '';
+  if(cart.length === 0){
+    list.innerHTML = '<li>Cart is empty</li>';
+    document.getElementById('cart-total').textContent = '0';
+    return;
+  }
+  cart.forEach((item,i) => {
+    list.innerHTML += `
+      <li>
+        <span class="item-info">${item.name} - ₹${item.price}</span>
+        <div class="qty-btns">
+          <button class="qty-update" onclick="updateQty(${i},-1)">−</button>
+          <span>${item.qty}</span>
+          <button class="qty-update" onclick="updateQty(${i},1)">+</button>
+        </div>
+        <span>₹${item.price*item.qty}</span>
+      </li>
+    `;
+  });
+  document.getElementById('cart-total').textContent = cart.reduce((t,c)=>t+c.price*c.qty,0);
+}
+function updateQty(i,delta){
+  cart[i].qty += delta;
+  if(cart[i].qty<=0) cart.splice(i,1);
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartCount();
+  renderCart();
+}
+function emptyCart(){
+  cart = [];
+  localStorage.setItem('cart', JSON.stringify(cart));
+  updateCartCount();
+  renderCart();
+}
+function openPayment(){
+  if(cart.length===0){ alert('Cart is empty'); return; }
+  clearPaymentForm();
+  switchPage('payment');
+}
+function clearPaymentForm(){
+  document.getElementById('cust-name').value = '';
+  document.getElementById('cust-mobile').value = '';
+  document.getElementById('cust-addr').value = '';
+  document.getElementById('cust-pay').value = 'upi';
+}
+function confirmPay(){
+  let name = document.getElementById('cust-name').value.trim();
+  let mobile = document.getElementById('cust-mobile').value.trim();
+  let addr = document.getElementById('cust-addr').value.trim();
+  let pay = document.getElementById('cust-pay').value;
+  if(!name || !mobile.match(/^[0-9]{10}$/) || !addr){
+    alert('Please fill all fields correctly.'); return;
+  }
+  const now = new Date();
+  let newOrder = {
+    id: "FD" + Math.floor(Math.random()*90000+10000),
+    items: cart.map(item => ({...item})),
+    total: cart.reduce((t,c)=>t+c.price*c.qty,0),
+    date: now.toLocaleString(),
+    cust: { name, mobile, addr, pay }
+  };
+  orders.unshift(newOrder);
+  localStorage.setItem('orders', JSON.stringify(orders));
+  emptyCart();
+  renderOrderHistory();
+  showOrderTrace(newOrder);
+  switchPage('thanks');
+}
+function showOrderTrace(order){
+  if(!order)return;
+  document.getElementById('order-trace').innerHTML = `
+    <strong>Order #${order.id}</strong><br/>
+    <span>Date: ${order.date}</span><br/>
+    <strong>Items:</strong><br/>${order.items.map(x => `- ${x.name} (Qty: ${x.qty})`).join('<br/>')}<br/>
+    <strong>Total:</strong> ₹${order.total}<br/>
+    <strong>Name:</strong> ${order.cust.name}<br/>
+    <strong>Mobile:</strong> ${order.cust.mobile}<br/>
+    <strong>Address:</strong> ${order.cust.addr}<br/>
+    <strong>Payment:</strong> ${order.cust.pay.toUpperCase()}
+  `;
+}
+function renderOrderHistory(){
+  const hist = document.getElementById('orders-history');
+  if(!orders.length){ hist.innerHTML = '<li>No orders yet.</li>'; return; }
+  hist.innerHTML = orders.map(ord => `
+    <li>
+      <span><strong>Order #${ord.id}</strong> | <span>${ord.date}</span></span><br>
+      <span>${ord.items.map(x => `${x.name} (Qty:${x.qty})`).join(', ')}</span><br>
+      <span>Total: ₹${ord.total}</span><br>
+      <span>Name: ${ord.cust.name}</span> | <span>Mobile: ${ord.cust.mobile}</span><br>
+      <span>Address: ${ord.cust.addr}</span> | <span>Payment: ${ord.cust.pay.toUpperCase()}</span>
+    </li>
+  `).join('');
+}
+
+// Navigation wiring
+[...document.querySelectorAll('.nav-item')].forEach(item => {
+  item.onclick=()=>{
+    switchPage(item.getAttribute('data-page'));
+    if(item.getAttribute('data-page')==='menu')renderFoodMenu(foodMenu);
+    if(item.getAttribute('data-page')==='orders')renderOrderHistory();
+  }
+});
+document.querySelector('.nav-cart').onclick=()=>{switchPage('cart');renderCart();}
+
+// Search function
+function doSearch(){
+  let q = document.getElementById('search-input').value.trim().toLowerCase();
+  const filtered = foodMenu.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q));
+  renderFoodMenu(filtered.length ? filtered : foodMenu);
+}
+document.getElementById('search-btn').onclick=doSearch;
+
+document.getElementById('search-input').onkeyup=(e)=>{if(e.key==='Enter')doSearch();}
+
+renderFoodMenu(foodMenu);
+updateCartCount();
+renderOrderHistory();
+</script>
+</body>
+</html>
